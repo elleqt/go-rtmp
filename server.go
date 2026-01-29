@@ -125,7 +125,7 @@ func (srv *Server) handleConn(conn net.Conn) {
 		}
 
 		if c.logger != nil {
-			c.logger.Error(fmt.Sprintf("Server closed by error: Err = %+v", err))
+			c.logger.Info(fmt.Sprintf("Server closed by error: Err = %+v", err))
 		}
 	}
 }
