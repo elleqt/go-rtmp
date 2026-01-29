@@ -8,8 +8,7 @@
 package rtmp
 
 import (
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
 var _ stateHandler = (*serverDataPlayHandler)(nil)
@@ -27,7 +26,7 @@ func (h *serverDataPlayHandler) onMessage(
 	timestamp uint32,
 	msg message.Message,
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverDataPlayHandler) onData(
@@ -36,7 +35,7 @@ func (h *serverDataPlayHandler) onData(
 	dataMsg *message.DataMessage,
 	body interface{},
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverDataPlayHandler) onCommand(
@@ -45,5 +44,5 @@ func (h *serverDataPlayHandler) onCommand(
 	cmdMsg *message.CommandMessage,
 	body interface{},
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }

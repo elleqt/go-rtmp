@@ -13,8 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
 type streamState int
@@ -90,7 +89,7 @@ func (h *streamHandler) Handle(chunkStreamID int, timestamp uint32, msg message.
 
 	default:
 		err := h.handler.onMessage(chunkStreamID, timestamp, msg)
-		if err == internal.ErrPassThroughMsg {
+		if err == ErrPassThroughMsg {
 			return h.stream.userHandler().OnUnknownMessage(timestamp, msg)
 		}
 		return err
@@ -159,7 +158,7 @@ func (h *streamHandler) handleData(
 	}
 
 	err := h.handler.onData(chunkStreamID, timestamp, dataMsg, value)
-	if err == internal.ErrPassThroughMsg {
+	if err == ErrPassThroughMsg {
 		return h.stream.userHandler().OnUnknownDataMessage(timestamp, dataMsg)
 	}
 	return err
@@ -199,7 +198,7 @@ func (h *streamHandler) handleCommand(
 	}
 
 	err := h.handler.onCommand(chunkStreamID, timestamp, cmdMsg, value)
-	if err == internal.ErrPassThroughMsg {
+	if err == ErrPassThroughMsg {
 		return h.stream.userHandler().OnUnknownCommandMessage(timestamp, cmdMsg)
 	}
 

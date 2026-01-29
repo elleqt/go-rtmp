@@ -10,8 +10,7 @@ package rtmp
 import (
 	"github.com/pkg/errors"
 
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
 var _ stateHandler = (*serverControlNotConnectedHandler)(nil)
@@ -30,7 +29,7 @@ func (h *serverControlNotConnectedHandler) onMessage(
 	timestamp uint32,
 	msg message.Message,
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverControlNotConnectedHandler) onData(
@@ -39,7 +38,7 @@ func (h *serverControlNotConnectedHandler) onData(
 	dataMsg *message.DataMessage,
 	body interface{},
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverControlNotConnectedHandler) onCommand(
@@ -108,7 +107,7 @@ func (h *serverControlNotConnectedHandler) onCommand(
 		return nil
 
 	default:
-		return internal.ErrPassThroughMsg
+		return ErrPassThroughMsg
 	}
 }
 
