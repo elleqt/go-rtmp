@@ -244,10 +244,12 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended boundary fmt 0",
 			fmt:  0,
 			value: &chunkMessageHeader{
-				timestamp:       extendedBoundary.timestamp,
-				messageLength:   extendedBoundary.messageLength,
-				messageTypeID:   extendedBoundary.messageTypeID,
-				messageStreamID: extendedBoundary.messageStreamID,
+				extendedTimestampPresent:      true,
+				extendedTimestampDeltaPresent: false,
+				timestamp:                     extendedBoundary.timestamp,
+				messageLength:                 extendedBoundary.messageLength,
+				messageTypeID:                 extendedBoundary.messageTypeID,
+				messageStreamID:               extendedBoundary.messageStreamID,
 			},
 			binary: []byte{
 				// Timestamp MARKER(BigEndian, 24bits)
@@ -266,9 +268,11 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended boundary fmt 1",
 			fmt:  1,
 			value: &chunkMessageHeader{
-				timestampDelta: extendedBoundary.timestampDelta,
-				messageLength:  extendedBoundary.messageLength,
-				messageTypeID:  extendedBoundary.messageTypeID,
+				extendedTimestampPresent:      false,
+				extendedTimestampDeltaPresent: true,
+				timestampDelta:                extendedBoundary.timestampDelta,
+				messageLength:                 extendedBoundary.messageLength,
+				messageTypeID:                 extendedBoundary.messageTypeID,
 			},
 			binary: []byte{
 				// Timestamp Delta MARKER(BigEndian, 24bits)
@@ -285,7 +289,9 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended boundary fmt 2",
 			fmt:  2,
 			value: &chunkMessageHeader{
-				timestampDelta: extendedBoundary.timestampDelta,
+				extendedTimestampPresent:      false,
+				extendedTimestampDeltaPresent: true,
+				timestampDelta:                extendedBoundary.timestampDelta,
 			},
 			binary: []byte{
 				// Timestamp Delta MARKER(BigEndian, 24bits)
@@ -299,10 +305,12 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended fmt 0",
 			fmt:  0,
 			value: &chunkMessageHeader{
-				timestamp:       extended.timestamp,
-				messageLength:   extended.messageLength,
-				messageTypeID:   extended.messageTypeID,
-				messageStreamID: extended.messageStreamID,
+				extendedTimestampPresent:      true,
+				extendedTimestampDeltaPresent: false,
+				timestamp:                     extended.timestamp,
+				messageLength:                 extended.messageLength,
+				messageTypeID:                 extended.messageTypeID,
+				messageStreamID:               extended.messageStreamID,
 			},
 			binary: []byte{
 				// Timestamp MARKER(BigEndian, 24bits)
@@ -321,9 +329,11 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended fmt 1",
 			fmt:  1,
 			value: &chunkMessageHeader{
-				timestampDelta: extended.timestampDelta,
-				messageLength:  extended.messageLength,
-				messageTypeID:  extended.messageTypeID,
+				extendedTimestampPresent:      false,
+				extendedTimestampDeltaPresent: true,
+				timestampDelta:                extended.timestampDelta,
+				messageLength:                 extended.messageLength,
+				messageTypeID:                 extended.messageTypeID,
 			},
 			binary: []byte{
 				// Timestamp Delta MARKER(BigEndian, 24bits)
@@ -340,7 +350,9 @@ func TestChunkMessageHeader(t *testing.T) {
 			name: "extended fmt 2",
 			fmt:  2,
 			value: &chunkMessageHeader{
-				timestampDelta: extended.timestampDelta,
+				extendedTimestampPresent:      false,
+				extendedTimestampDeltaPresent: true,
+				timestampDelta:                extended.timestampDelta,
 			},
 			binary: []byte{
 				// Timestamp Delta MARKER(BigEndian, 24bits)
@@ -382,7 +394,7 @@ func TestChunkMessageHeader(t *testing.T) {
 
 				r := bytes.NewReader(tc.binary)
 				var mh chunkMessageHeader
-				err := decodeChunkMessageHeader(r, tc.fmt, nil, &mh)
+				err := decodeChunkMessageHeader(r, tc.fmt, nil, &mh, mh)
 				require.Nil(t, err)
 				require.Equal(t, tc.value, &mh)
 			})
