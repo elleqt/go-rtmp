@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/elleqt/go-rtmp"
 	rtmpmsg "github.com/elleqt/go-rtmp/message"
 	"github.com/pkg/errors"
 	"github.com/yutopp/go-flv"

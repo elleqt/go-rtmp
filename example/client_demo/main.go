@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/elleqt/go-rtmp"
 	log "github.com/sirupsen/logrus"
 
 	rtmpmsg "github.com/elleqt/go-rtmp/message"

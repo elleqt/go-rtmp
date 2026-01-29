@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/elleqt/go-rtmp"
 	rtmpmsg "github.com/elleqt/go-rtmp/message"
 	"github.com/pkg/errors"
 	flvtag "github.com/yutopp/go-flv/tag"
