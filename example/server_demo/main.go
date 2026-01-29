@@ -33,6 +33,8 @@ func main() {
 			}
 		},
 	})
+	defer srv.Close()
+
 	if err := srv.Serve(listener); err != nil {
 		log.Panicf("Failed: %+v", err)
 	}

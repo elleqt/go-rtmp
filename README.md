@@ -32,4 +32,4 @@ and [client_demo](https://github.com/yutopp/go-rtmp/blob/master/example/client_d
 
 ## License
 
-[Boost Software License - Version 1.0](./LICENSE_1_0.txt)
+[Boost Software License - Version 1.0](./LICENSE.txt)
