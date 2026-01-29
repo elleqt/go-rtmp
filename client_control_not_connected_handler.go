@@ -8,6 +8,8 @@
 package rtmp
 
 import (
+	"fmt"
+
 	"github.com/elleqt/go-rtmp/message"
 )
 
@@ -45,12 +47,13 @@ func (h *clientControlNotConnectedHandler) onCommand(
 	cmdMsg *message.CommandMessage,
 	body interface{},
 ) error {
-	l := h.sh.Logger()
-
 	switch cmd := body.(type) {
 	case *message.NetConnectionConnectResult:
-		l.Info("ConnectResult")
-		l.Infof("Result: Info = %+v, Props = %+v", cmd.Information, cmd.Properties)
+		h.sh.stream.conn.logger.Info(
+			fmt.Sprintf(
+				"Connection Result: StreamID = %d, Info = %+v, Props = %+v",
+				h.sh.stream.streamID, cmd.Information, cmd.Properties,
+			))
 
 		return nil
 

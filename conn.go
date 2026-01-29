@@ -10,15 +10,13 @@ package rtmp
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"sync"
 
+	"github.com/elleqt/go-rtmp/message"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
-	"github.com/elleqt/go-rtmp/message"
 )
 
 type Conn struct {
@@ -30,7 +28,7 @@ type Conn struct {
 	handler  Handler
 
 	config *ConnConfig
-	logger logrus.FieldLogger
+	logger Logger
 
 	ignoredMessages uint32
 
@@ -50,7 +48,7 @@ type ConnConfig struct {
 
 	ControlState StreamControlStateConfig
 
-	Logger  logrus.FieldLogger
+	Logger  Logger
 	RPreset ResponsePreset
 }
 
@@ -70,13 +68,6 @@ func (cb *ConnConfig) normalize() *ConnConfig {
 	}
 
 	c.ControlState = *c.ControlState.normalize()
-
-	if c.Logger == nil {
-		l := logrus.New()
-		l.Out = ioutil.Discard
-
-		c.Logger = l
-	}
 
 	return &c
 }
@@ -179,10 +170,12 @@ func (c *Conn) handleMessage(chunkStreamID int, timestamp uint32, cmsg *ChunkMes
 	stream, err := c.streams.At(cmsg.StreamID)
 	if err != nil {
 		if c.config.IgnoreMessagesOnNotExistStream {
-			c.logger.Warnf("Messages are received on not exist streams: StreamID = %d, MessageType = %T",
-				cmsg.StreamID,
-				cmsg.Message,
-			)
+			if c.logger != nil {
+				c.logger.Warn(fmt.Sprintf("Messages are received on not exist streams: StreamID = %d, MessageType = %T",
+					cmsg.StreamID,
+					cmsg.Message,
+				))
+			}
 
 			if c.ignoredMessages < c.config.IgnoreMessagesOnNotExistStreamThreshold {
 				c.ignoredMessages++
@@ -196,8 +189,11 @@ func (c *Conn) handleMessage(chunkStreamID int, timestamp uint32, cmsg *ChunkMes
 	if err := stream.handle(chunkStreamID, timestamp, cmsg.Message); err != nil {
 		switch err := err.(type) {
 		case *message.UnknownDataBodyDecodeError, *message.UnknownCommandBodyDecodeError:
+			if c.logger != nil {
+				c.logger.Warn(fmt.Sprintf("Ignored unknown message body: Err = %+v", err))
+			}
+
 			// Ignore unknown messsage body
-			c.logger.Warnf("Ignored unknown message body: Err = %+v", err)
 			return nil
 		}
 		return err

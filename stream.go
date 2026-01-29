@@ -341,7 +341,3 @@ func (s *Stream) streamer() *ChunkStreamer {
 func (s *Stream) userHandler() Handler {
 	return s.conn.handler
 }
-
-func (s *Stream) logger() logrus.FieldLogger {
-	return s.conn.logger
-}

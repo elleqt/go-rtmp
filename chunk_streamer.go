@@ -9,13 +9,13 @@ package rtmp
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/elleqt/go-rtmp/message"
 )
@@ -52,7 +52,7 @@ type ChunkStreamer struct {
 
 	cacheBuffer []byte
 	config      *StreamControlStateConfig
-	logger      logrus.FieldLogger
+	logger      Logger
 }
 
 func NewChunkStreamer(r io.Reader, w io.Writer, config *StreamControlStateConfig) *ChunkStreamer {
@@ -86,7 +86,6 @@ func NewChunkStreamer(r io.Reader, w io.Writer, config *StreamControlStateConfig
 
 		cacheBuffer: make([]byte, 64*1024), // cache 64KB
 		config:      config,
-		logger:      logrus.StandardLogger(),
 	}
 	cs.writerSched.streamer = cs
 	go cs.schedWriteLoop()
@@ -346,7 +345,9 @@ func (cs *ChunkStreamer) waitWriters() {
 
 	for k, writer := range cs.writers {
 		if err := writer.Wait(ctx); err != nil {
-			cs.logger.Warnf("Failed to wait writer: ID = %d", k)
+			if cs.logger != nil {
+				cs.logger.Warn(fmt.Sprintf("Failed to wait writer: ID = %d", k))
+			}
 		}
 	}
 }
@@ -424,7 +425,10 @@ func (cs *ChunkStreamer) prepareChunkWriter(chunkStreamID int) (*ChunkStreamWrit
 }
 
 func (cs *ChunkStreamer) sendAck(readBytes uint32) error {
-	cs.logger.Debugf("Sending Ack...: Bytes = %d", readBytes)
+	if cs.logger != nil {
+		cs.logger.Debug(fmt.Sprintf("Sending Ack...: Bytes = %d", readBytes))
+	}
+
 	// TODO: fix timestamp
 	return cs.controlStreamWriter(ctrlMsgChunkStreamID, 0, &message.Ack{
 		SequenceNumber: readBytes,

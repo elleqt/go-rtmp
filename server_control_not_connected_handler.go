@@ -8,6 +8,8 @@
 package rtmp
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/elleqt/go-rtmp/message"
@@ -47,16 +49,22 @@ func (h *serverControlNotConnectedHandler) onCommand(
 	cmdMsg *message.CommandMessage,
 	body interface{},
 ) (err error) {
-	l := h.sh.Logger()
+	logger := h.sh.stream.conn.logger
 
 	switch cmd := body.(type) {
 	case *message.NetConnectionConnect:
-		l.Info("Connect")
+		if logger != nil {
+			logger.Info("Connect")
+		}
+
 		defer func() {
 			if err != nil {
 				result := h.newConnectErrorResult()
 
-				l.Infof("Connect(Error): ResponseBody = %#v, Err = %+v", result, err)
+				if logger != nil {
+					logger.Info(fmt.Sprintf("Connect(Error): ResponseBody = %#v, Err = %+v", result, err))
+				}
+
 				if err1 := h.sh.stream.ReplyConnect(chunkStreamID, timestamp, result); err1 != nil {
 					err = errors.Wrapf(err, "Failed to reply response: Err = %+v", err1)
 				}
@@ -67,17 +75,23 @@ func (h *serverControlNotConnectedHandler) onCommand(
 			return err
 		}
 
-		l.Infof("Set win ack size: Size = %+v", h.sh.stream.streamer().SelfState().AckWindowSize())
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Set win ack size: Size = %+v", h.sh.stream.streamer().SelfState().AckWindowSize()))
+		}
+
 		if err := h.sh.stream.WriteWinAckSize(ctrlMsgChunkStreamID, timestamp, &message.WinAckSize{
 			Size: h.sh.stream.streamer().SelfState().AckWindowSize(),
 		}); err != nil {
 			return err
 		}
 
-		l.Infof("Set peer bandwidth: Size = %+v, Limit = %+v",
-			h.sh.stream.streamer().SelfState().BandwidthWindowSize(),
-			h.sh.stream.streamer().SelfState().BandwidthLimitType(),
-		)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Set peer bandwidth: Size = %+v, Limit = %+v",
+				h.sh.stream.streamer().SelfState().BandwidthWindowSize(),
+				h.sh.stream.streamer().SelfState().BandwidthLimitType(),
+			))
+		}
+
 		if err := h.sh.stream.WriteSetPeerBandwidth(ctrlMsgChunkStreamID, timestamp, &message.SetPeerBandwidth{
 			Size:  h.sh.stream.streamer().SelfState().BandwidthWindowSize(),
 			Limit: h.sh.stream.streamer().SelfState().BandwidthLimitType(),
@@ -85,7 +99,10 @@ func (h *serverControlNotConnectedHandler) onCommand(
 			return err
 		}
 
-		l.Infof("Stream Begin: ID = %d", h.sh.stream.streamID)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Stream Begin: ID = %d", h.sh.stream.streamID))
+		}
+
 		if err := h.sh.stream.WriteUserCtrl(ctrlMsgChunkStreamID, timestamp, &message.UserCtrl{
 			Event: &message.UserCtrlEventStreamBegin{
 				StreamID: h.sh.stream.streamID,
@@ -96,11 +113,17 @@ func (h *serverControlNotConnectedHandler) onCommand(
 
 		result := h.newConnectSuccessResult()
 
-		l.Infof("Connect: ResponseBody = %#v", result)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Connect: ResponseBody = %#v", result))
+		}
+
 		if err := h.sh.stream.ReplyConnect(chunkStreamID, timestamp, result); err != nil {
 			return err
 		}
-		l.Info("Connected")
+
+		if logger != nil {
+			logger.Info("Connected")
+		}
 
 		h.sh.ChangeState(streamStateServerConnected)
 

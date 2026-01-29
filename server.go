@@ -8,6 +8,7 @@
 package rtmp
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -115,9 +116,16 @@ func (srv *Server) handleConn(conn net.Conn) {
 
 	if err := sc.Serve(); err != nil {
 		if err == io.EOF {
-			c.logger.Infof("Server closed")
+			if c.logger != nil {
+				c.logger.Info("Server closed")
+
+			}
+
 			return
 		}
-		c.logger.Errorf("Server closed by error: Err = %+v", err)
+
+		if c.logger != nil {
+			c.logger.Error(fmt.Sprintf("Server closed by error: Err = %+v", err))
+		}
 	}
 }

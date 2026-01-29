@@ -10,10 +10,10 @@ package rtmp
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/yutopp/go-amf0"
 
@@ -31,7 +31,7 @@ type serverCanAcceptConnectHandler struct {
 func TestServerCanAcceptConnect(t *testing.T) {
 	config := &ConnConfig{
 		Handler: &serverCanAcceptConnectHandler{},
-		Logger:  logrus.StandardLogger(),
+		Logger:  slog.Default(),
 	}
 
 	prepareConnection(t, config, func(c *ClientConn) {
@@ -51,7 +51,7 @@ func (h *serverCanRejectConnectHandler) OnConnect(_ uint32, _ *message.NetConnec
 func TestServerCanRejectConnect(t *testing.T) {
 	config := &ConnConfig{
 		Handler: &serverCanRejectConnectHandler{},
-		Logger:  logrus.StandardLogger(),
+		Logger:  slog.Default(),
 	}
 
 	prepareConnection(t, config, func(c *ClientConn) {
@@ -82,7 +82,7 @@ type serverCanAcceptCreateStreamHandler struct {
 func TestServerCanAcceptCreateStream(t *testing.T) {
 	config := &ConnConfig{
 		Handler: &serverCanAcceptCreateStreamHandler{},
-		Logger:  logrus.StandardLogger(),
+		Logger:  slog.Default(),
 		ControlState: StreamControlStateConfig{
 			MaxMessageStreams: 2, // Control and another 1 stream
 		},
@@ -115,7 +115,7 @@ type serverCanAcceptDeleteStreamHandler struct {
 func TestServerCanAcceptDeleteStream(t *testing.T) {
 	config := &ConnConfig{
 		Handler: &serverCanAcceptDeleteStreamHandler{},
-		Logger:  logrus.StandardLogger(),
+		Logger:  slog.Default(),
 		ControlState: StreamControlStateConfig{
 			MaxMessageStreams: 2, // Control and another 1 stream
 		},
@@ -167,7 +167,7 @@ func prepareConnection(t *testing.T, config *ConnConfig, f func(c *ClientConn)) 
 
 	// prepare client
 	c, err := Dial("rtmp", l.Addr().String(), &ConnConfig{
-		Logger: logrus.StandardLogger(),
+		Logger: slog.Default(),
 	})
 	require.Nil(t, err)
 	defer func() {
