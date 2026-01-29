@@ -12,3 +12,4 @@ go.work
 .env.*
 bin/
 .buildx-cache/
+coverage.txt
