@@ -8,13 +8,12 @@
 package rtmp
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
 type streamState int
@@ -58,8 +57,7 @@ type streamHandler struct {
 	handler stateHandler // A handler for each states
 	state   streamState
 
-	loggerEntry *logrus.Entry
-	m           sync.Mutex
+	m sync.Mutex
 }
 
 // newEntryHandler Create an incomplete new instance of entryHandler.
@@ -71,7 +69,7 @@ func newStreamHandler(s *Stream) *streamHandler {
 }
 
 func (h *streamHandler) Handle(chunkStreamID int, timestamp uint32, msg message.Message) error {
-	l := h.Logger()
+	logger := h.stream.conn.logger
 
 	switch msg := msg.(type) {
 	case *message.DataMessage:
@@ -81,16 +79,20 @@ func (h *streamHandler) Handle(chunkStreamID int, timestamp uint32, msg message.
 		return h.handleCommand(chunkStreamID, timestamp, msg)
 
 	case *message.SetChunkSize:
-		l.Infof("Handle SetChunkSize: Msg = %#v", msg)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Handle SetChunkSize: Msg = %#v", msg))
+		}
+
 		return h.stream.streamer().PeerState().SetChunkSize(msg.ChunkSize)
-
 	case *message.WinAckSize:
-		l.Infof("Handle WinAckSize: Msg = %#v", msg)
-		return h.stream.streamer().PeerState().SetAckWindowSize(msg.Size)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Handle WinAckSize: Msg = %#v", msg))
+		}
 
+		return h.stream.streamer().PeerState().SetAckWindowSize(msg.Size)
 	default:
 		err := h.handler.onMessage(chunkStreamID, timestamp, msg)
-		if err == internal.ErrPassThroughMsg {
+		if err == ErrPassThroughMsg {
 			return h.stream.userHandler().OnUnknownMessage(timestamp, msg)
 		}
 		return err
@@ -125,24 +127,13 @@ func (h *streamHandler) ChangeState(state streamState) {
 	}
 	h.state = state
 
-	l := h.Logger()
-	l.Infof("Change state: From = %s, To = %s", prevState, h.State())
+	if h.stream.conn.logger != nil {
+		h.stream.conn.logger.Info(fmt.Sprintf("Change state: From = %s, To = %s", prevState, h.State()))
+	}
 }
 
 func (h *streamHandler) State() streamState {
 	return h.state
-}
-
-func (h *streamHandler) Logger() *logrus.Entry {
-	if h.loggerEntry == nil {
-		h.loggerEntry = h.stream.logger().WithFields(logrus.Fields{
-			"stream_id": h.stream.streamID,
-		})
-	}
-
-	h.loggerEntry.Data["state"] = h.State()
-
-	return h.loggerEntry
 }
 
 func (h *streamHandler) handleData(
@@ -159,7 +150,7 @@ func (h *streamHandler) handleData(
 	}
 
 	err := h.handler.onData(chunkStreamID, timestamp, dataMsg, value)
-	if err == internal.ErrPassThroughMsg {
+	if err == ErrPassThroughMsg {
 		return h.stream.userHandler().OnUnknownDataMessage(timestamp, dataMsg)
 	}
 	return err
@@ -199,7 +190,7 @@ func (h *streamHandler) handleCommand(
 	}
 
 	err := h.handler.onCommand(chunkStreamID, timestamp, cmdMsg, value)
-	if err == internal.ErrPassThroughMsg {
+	if err == ErrPassThroughMsg {
 		return h.stream.userHandler().OnUnknownCommandMessage(timestamp, cmdMsg)
 	}
 

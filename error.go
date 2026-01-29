@@ -12,10 +12,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
-var ErrClosed = errors.New("Server is closed")
+var (
+	ErrPassThroughMsg = errors.New("Msg is passed through")
+	ErrClosed         = errors.New("Server is closed")
+)
 
 type ConnectRejectedError struct {
 	TransactionID int64

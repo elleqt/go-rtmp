@@ -1,10 +1,12 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"log"
+	"log/slog"
 
-	"github.com/yutopp/go-rtmp"
-	rtmpmsg "github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp"
+
+	rtmpmsg "github.com/elleqt/go-rtmp/message"
 )
 
 const (
@@ -13,18 +15,17 @@ const (
 
 func main() {
 	client, err := rtmp.Dial("rtmp", "localhost:1935", &rtmp.ConnConfig{
-		Logger: log.StandardLogger(),
+		Logger: slog.Default(),
 	})
 	if err != nil {
 		log.Fatalf("Failed to dial: %+v", err)
 	}
 	defer client.Close()
-	log.Infof("Client created")
 
 	if err := client.Connect(nil); err != nil {
 		log.Fatalf("Failed to connect: Err=%+v", err)
 	}
-	log.Infof("connected")
+	log.Println("connected")
 
 	stream, err := client.CreateStream(nil, chunkSize)
 	if err != nil {
@@ -39,5 +40,5 @@ func main() {
 		log.Fatalf("Failed to send publish message: Err=%+v", err)
 	}
 
-	log.Infof("stream created")
+	log.Println("stream created")
 }

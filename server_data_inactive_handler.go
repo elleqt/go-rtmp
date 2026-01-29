@@ -8,10 +8,11 @@
 package rtmp
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"github.com/elleqt/go-rtmp/message"
 )
 
 var _ stateHandler = (*serverDataInactiveHandler)(nil)
@@ -31,7 +32,7 @@ func (h *serverDataInactiveHandler) onMessage(
 	timestamp uint32,
 	msg message.Message,
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverDataInactiveHandler) onData(
@@ -40,7 +41,7 @@ func (h *serverDataInactiveHandler) onData(
 	dataMsg *message.DataMessage,
 	body interface{},
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *serverDataInactiveHandler) onCommand(
@@ -49,11 +50,13 @@ func (h *serverDataInactiveHandler) onCommand(
 	cmdMsg *message.CommandMessage,
 	body interface{},
 ) error {
-	l := h.sh.Logger()
+	logger := h.sh.stream.conn.logger
 
 	switch cmd := body.(type) {
 	case *message.NetStreamPublish:
-		l.Infof("Publisher is comming: %#v", cmd)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Publisher is comming: %#v", cmd))
+		}
 
 		streamCtx := &StreamContext{
 			StreamID: h.sh.stream.streamID,
@@ -62,7 +65,10 @@ func (h *serverDataInactiveHandler) onCommand(
 			// TODO: Support message.NetStreamOnStatusCodePublishBadName
 			result := h.newOnStatus(message.NetStreamOnStatusCodePublishFailed, "Publish failed.")
 
-			l.Infof("Reject a Publish request: Response = %#v, Err = %+v", result, err)
+			if logger != nil {
+				logger.Info(fmt.Sprintf("Reject a Publish request: Response = %#v, Err = %+v", result, err))
+			}
+
 			if err1 := h.sh.stream.NotifyStatus(chunkStreamID, timestamp, result); err1 != nil {
 				return errors.Wrapf(err, "Failed to reply response: Err = %+v", err1)
 			}
@@ -74,14 +80,19 @@ func (h *serverDataInactiveHandler) onCommand(
 		if err := h.sh.stream.NotifyStatus(chunkStreamID, timestamp, result); err != nil {
 			return err
 		}
-		l.Infof("Publisher accepted")
+
+		if logger != nil {
+			logger.Info("Publisher accepted")
+		}
 
 		h.sh.ChangeState(streamStateServerPublish)
 
 		return nil
 
 	case *message.NetStreamPlay:
-		l.Infof("Player is comming: %#v", cmd)
+		if logger != nil {
+			logger.Info(fmt.Sprintf("Player is comming: %#v", cmd))
+		}
 
 		streamCtx := &StreamContext{
 			StreamID: h.sh.stream.streamID,
@@ -89,7 +100,10 @@ func (h *serverDataInactiveHandler) onCommand(
 		if err := h.sh.stream.userHandler().OnPlay(streamCtx, timestamp, cmd); err != nil {
 			result := h.newOnStatus(message.NetStreamOnStatusCodePlayFailed, "Play failed.")
 
-			l.Infof("Reject a Play request: Response = %#v, Err = %+v", result, err)
+			if logger != nil {
+				logger.Info(fmt.Sprintf("Reject a Play request: Response = %#v, Err = %+v", result, err))
+			}
+
 			if err1 := h.sh.stream.NotifyStatus(chunkStreamID, timestamp, result); err1 != nil {
 				return errors.Wrapf(err, "Failed to reply response: Err = %+v", err1)
 			}
@@ -101,14 +115,17 @@ func (h *serverDataInactiveHandler) onCommand(
 		if err := h.sh.stream.NotifyStatus(chunkStreamID, timestamp, result); err != nil {
 			return err
 		}
-		l.Infof("Player accepted")
+
+		if logger != nil {
+			logger.Info("Player accepted")
+		}
 
 		h.sh.ChangeState(streamStateServerPlay)
 
 		return nil
 
 	default:
-		return internal.ErrPassThroughMsg
+		return ErrPassThroughMsg
 	}
 }
 

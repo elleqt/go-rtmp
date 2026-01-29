@@ -8,8 +8,9 @@
 package rtmp
 
 import (
-	"github.com/yutopp/go-rtmp/internal"
-	"github.com/yutopp/go-rtmp/message"
+	"fmt"
+
+	"github.com/elleqt/go-rtmp/message"
 )
 
 var _ stateHandler = (*clientControlNotConnectedHandler)(nil)
@@ -28,7 +29,7 @@ func (h *clientControlNotConnectedHandler) onMessage(
 	timestamp uint32,
 	msg message.Message,
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *clientControlNotConnectedHandler) onData(
@@ -37,7 +38,7 @@ func (h *clientControlNotConnectedHandler) onData(
 	dataMsg *message.DataMessage,
 	body interface{},
 ) error {
-	return internal.ErrPassThroughMsg
+	return ErrPassThroughMsg
 }
 
 func (h *clientControlNotConnectedHandler) onCommand(
@@ -46,16 +47,17 @@ func (h *clientControlNotConnectedHandler) onCommand(
 	cmdMsg *message.CommandMessage,
 	body interface{},
 ) error {
-	l := h.sh.Logger()
-
 	switch cmd := body.(type) {
 	case *message.NetConnectionConnectResult:
-		l.Info("ConnectResult")
-		l.Infof("Result: Info = %+v, Props = %+v", cmd.Information, cmd.Properties)
+		h.sh.stream.conn.logger.Info(
+			fmt.Sprintf(
+				"Connection Result: StreamID = %d, Info = %+v, Props = %+v",
+				h.sh.stream.streamID, cmd.Information, cmd.Properties,
+			))
 
 		return nil
 
 	default:
-		return internal.ErrPassThroughMsg
+		return ErrPassThroughMsg
 	}
 }

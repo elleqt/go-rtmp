@@ -2,10 +2,11 @@ package main
 
 import (
 	"io"
+	"log"
+	"log/slog"
 	"net"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/yutopp/go-rtmp"
+	"github.com/elleqt/go-rtmp"
 )
 
 func main() {
@@ -21,22 +22,19 @@ func main() {
 
 	srv := rtmp.NewServer(&rtmp.ServerConfig{
 		OnConnect: func(conn net.Conn) (io.ReadWriteCloser, *rtmp.ConnConfig) {
-			l := log.StandardLogger()
-			//l.SetLevel(logrus.DebugLevel)
-
-			h := &Handler{}
-
 			return conn, &rtmp.ConnConfig{
-				Handler: h,
+				Handler: &Handler{},
 
 				ControlState: rtmp.StreamControlStateConfig{
 					DefaultBandwidthWindowSize: 6 * 1024 * 1024 / 8,
 				},
 
-				Logger: l,
+				Logger: slog.Default(),
 			}
 		},
 	})
+	defer srv.Close()
+
 	if err := srv.Serve(listener); err != nil {
 		log.Panicf("Failed: %+v", err)
 	}
