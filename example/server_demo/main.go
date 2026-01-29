@@ -2,10 +2,11 @@ package main
 
 import (
 	"io"
+	"log"
+	"log/slog"
 	"net"
 
 	"github.com/elleqt/go-rtmp"
-	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -21,19 +22,14 @@ func main() {
 
 	srv := rtmp.NewServer(&rtmp.ServerConfig{
 		OnConnect: func(conn net.Conn) (io.ReadWriteCloser, *rtmp.ConnConfig) {
-			l := log.StandardLogger()
-			//l.SetLevel(logrus.DebugLevel)
-
-			h := &Handler{}
-
 			return conn, &rtmp.ConnConfig{
-				Handler: h,
+				Handler: &Handler{},
 
 				ControlState: rtmp.StreamControlStateConfig{
 					DefaultBandwidthWindowSize: 6 * 1024 * 1024 / 8,
 				},
 
-				Logger: l,
+				Logger: slog.Default(),
 			}
 		},
 	})

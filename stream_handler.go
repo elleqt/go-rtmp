@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/elleqt/go-rtmp/message"
 )
@@ -58,8 +57,7 @@ type streamHandler struct {
 	handler stateHandler // A handler for each states
 	state   streamState
 
-	loggerEntry *logrus.Entry
-	m           sync.Mutex
+	m sync.Mutex
 }
 
 // newEntryHandler Create an incomplete new instance of entryHandler.

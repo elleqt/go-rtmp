@@ -10,12 +10,11 @@ package rtmp
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
 	"github.com/elleqt/go-rtmp/message"
+	"github.com/pkg/errors"
 )
 
 // Stream represents a logical message stream
@@ -136,7 +135,10 @@ func (s *Stream) ReplyConnect(
 func (s *Stream) CreateStream(body *message.NetConnectionCreateStream, chunkSize uint32) (*message.NetConnectionCreateStreamResult, error) {
 	oldChunkSize := s.conn.streamer.selfState.chunkSize
 	if chunkSize > 0 && chunkSize != oldChunkSize {
-		logrus.Infof("Changing chunkSize %d->%d", oldChunkSize, chunkSize)
+		if s.conn.logger != nil {
+			s.conn.logger.Info(fmt.Sprintf("Changing chunkSize %d->%d", oldChunkSize, chunkSize))
+		}
+
 		s.conn.streamer.selfState.chunkSize = chunkSize
 		err := s.WriteSetChunkSize(chunkSize)
 		if err != nil {
